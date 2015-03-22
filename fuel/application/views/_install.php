@@ -8,9 +8,52 @@ if ($this->input->post('rewrite')) {
         $contents = file_get_contents($file);
         $search = '#RewriteBase /';
         $replacement = $this->input->post('rewrite');
-        $output = preg_replace($search, $replacement, $contents);
+        $output = str_replace($search, $replacement, $contents);
         if ($contents != $output) {
             file_put_contents($file, $output);
+        }
+    }
+}
+if ($this->input->post('submit_database')) {
+    $file = 'fuel/application/config/database.php';
+    if (is_really_writable($file)) {
+        $contents = file_get_contents($file);
+        $replace = array();
+        $replace['$db[\'default\'][\'hostname\'] = \'localhost\''] = '$db[\'default\'][\'hostname\'] = \'' . $this->input->post('db_host') . '\'';
+        $replace['$db[\'default\'][\'username\'] = \'\''] = '$db[\'default\'][\'username\'] = \'' . $this->input->post('db_user') . '\'';
+        $replace['$db[\'default\'][\'password\'] = \'\''] = '$db[\'default\'][\'password\'] = \'' . $this->input->post('db_pass') . '\'';
+        $replace['$db[\'default\'][\'database\'] = \'\''] = '$db[\'default\'][\'database\'] = \'' . $this->input->post('db_name') . '\'';
+        $output = str_replace(array_keys($replace), array_values($replace), $contents);
+        if ($contents != $output) {
+            file_put_contents($file, $output);
+        }
+    }
+    $sql_file = 'fuel/install/fuel_schema.sql';
+    $input = file_get_contents($sql_file);
+    // Remove /* */ comments (http://ostermiller.org/findcomment.html)
+    $input = preg_replace('#/\*(.|[\r\n])*?\*/#', "\n", $input);
+    // Remove # style comments
+    $input = preg_replace('/\n{2,}/', "\n", preg_replace('/^#.*$/m', "\n", $input));
+    function split_sql_file($sql, $delimiter = ';') {
+        $sql = str_replace("\r", '', $sql);
+        $data = preg_split('/' . preg_quote($delimiter, '/') . '$/m', $sql);
+        $data = array_map('trim', $data);
+        // The empty case
+        $end_data = end($data);
+        if (empty($end_data)) {
+            unset($data[key($data)]);
+        }
+        return $data;
+    }
+    $sqls = split_sql_file($input);
+    $this->ci = & get_instance();
+    $this->ci->load->database();
+    foreach ($sqls as $sql) {
+        if ($sql) {
+            $this->ci->db->query($sql);
+            if ($this->ci->db->_error_message()) {
+                $errors[] = $this->ci->db->_error_message();
+            }
         }
     }
 }
@@ -54,7 +97,22 @@ if ($this->input->post('rewrite')) {
             </div>
             <div class="col-md-8">
                 <h4>Install the database</h4>
-                <p>Install the FUEL CMS database by first creating the database in MySQL and then importing the <strong>fuel/install/fuel_schema.sql</strong> file. After creating the database, change the database configuration found in <strong>fuel/application/config/database.php</strong> to include your hostname (e.g. localhost), username, password and the database to match the new database you created.</p>
+                <p>First create the database in MySQL.</p>
+                <p>Change the database configuration found in <code>fuel/application/config/database.php</code> to include your hostname (e.g. localhost), username, password and the database to match the new database you created.</p>
+                <p>Then import the <code>fuel/install/fuel_schema.sql</code> file.</p>
+                <?php if (is_really_writable('fuel/application/config/database.php')) : ?>
+                    <?php echo form_open(''); ?>
+                    <?php echo form_label('Database Hostname', 'db_host'); ?>
+                    <?php echo form_input('db_host', 'localhost'); ?><br>
+                    <?php echo form_label('Database Username', 'db_user'); ?>
+                    <?php echo form_input('db_user', $this->input->post('db_user')); ?><br>
+                    <?php echo form_label('Database Password', 'db_pass'); ?>
+                    <?php echo form_password('db_pass', $this->input->post('db_pass')); ?><br>
+                    <?php echo form_label('Database Name', 'db_name'); ?>
+                    <?php echo form_input('db_name', $this->input->post('db_name')); ?><br>
+                    <?php echo form_submit('submit_database', 'Set Database'); ?>
+                    <?php echo form_close(); ?>
+                <?php endif; ?>
             </div>
         </li>
         <li>
