@@ -16,8 +16,12 @@
             </div>
             <div class="col-md-8">
                 <h4>Change the Apache .htaccess file</h4>
-                <p>Change the Apache .htaccess found at the root of FUEL CMS's installation folder to the proper RewriteBase directory. The default is your web server's root directory (e.g "/"), but if you have FUEL CMS installed in a sub folder, you will need to add the path to line 5.
-                    If you are using the folder it was zipped up in from GitHub, it would be <strong>RewriteBase /FUEL-CMS-master/</strong>.</p>
+                <p>Change the Apache .htaccess found at the root of FUEL CMS's installation folder to the proper RewriteBase directory.</p>
+                <p>The default is your web server's root directory (e.g "/"), but if you have FUEL CMS installed in a sub folder, you will need to replace the line which reads <code>RewriteBase /</code>.</p>
+                <p>If you are using the folder it was zipped up in from GitHub, it would be <code>RewriteBase /FUEL-CMS-master/</code>.</p>
+                <?php if (dirname($_SERVER['PHP_SELF']) != '/') : ?>
+                <p>In this instance, it would appear to be <code>RewriteBase <?php echo dirname($_SERVER['PHP_SELF']) ?>/</code>.</p>
+                <?php endif; ?>
                 <p>In some server environments, you may need to add a "?" after index.php in the .htaccess like so: <code>RewriteRule .* index.php?/$0 [L]</code></p>
                 <p class="callout"><strong>NOTE:</strong> This is the only step needed if you want to use FUEL <em>without</em> the CMS.</p>
             </div>
