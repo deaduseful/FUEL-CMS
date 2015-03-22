@@ -152,7 +152,7 @@ if ($this->input->post('submit_database')) {
                     <h4>Make configuration changes</h4>
                     <ul class="writable">
                         <?php if ($this->config->item('encryption_key') == '') : ?>
-                            <li>In the <strong>fuel/application/config/config.php</strong>, <a href="http://jeffreybarke.net/tools/codeigniter-encryption-key-generator/">change the <code>$config['encryption_key']</code> to your own unique key</a>.</li></li>
+                            <li>In the <strong>fuel/application/config/config.php</strong>, <a href="http://jeffreybarke.net/tools/codeigniter-encryption-key-generator/">change the <code>$config['encryption_key']</code> to your own unique key</a>.</li>
                         <?php endif; ?>
                         <?php if (!$this->config->item('admin_enabled', 'fuel')) : ?>
                             <li>In the <strong>fuel/application/config/MY_fuel.php</strong> file, change the <code>$config['admin_enabled']</code> configuration property to <code>TRUE</code>. If you do not want the CMS accessible, leave it as <strong>FALSE</strong>.</li>
