@@ -32,7 +32,7 @@
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
                         </button>
-                        <a class="navbar-brand" href="/"><?php echo $this->fuel->config('site_name') ?></a>
+                        <a class="navbar-brand" href="/"><?php echo fuel_var('site_name') ?></a>
                     </div>
                     <div id="navbar" class="navbar-collapse collapse">
                         <?php echo fuel_nav(array('container_tag_class' => 'nav navbar-nav topmenu', 'item_id_prefix' => 'topmenu_', 'subcontainer_tag_class' => array('dropdown-menu'))); ?>

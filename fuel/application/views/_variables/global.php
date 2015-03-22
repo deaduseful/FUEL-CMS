@@ -12,6 +12,8 @@ $vars['meta_description'] = '';
 $vars['js'] = array();
 $vars['css'] = array();
 $vars['body_class'] = uri_segment(1).' '.uri_segment(2);
+$vars['site_name'] = $CI->fuel->config('site_name');
+$vars['analytics_id'] = 'UA-XXXXX-X';
 
 // page specific variables
 $pages = array();
