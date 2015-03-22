@@ -936,7 +936,7 @@ FileETag None
 
 <IfModule mod_rewrite.c>
 	RewriteEngine On
-	RewriteBase /
+	#RewriteBase /
 	<Files .*>
 		Order Deny,Allow
 		Deny From All

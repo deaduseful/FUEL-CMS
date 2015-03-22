@@ -1,5 +1,20 @@
 <?php fuel_set_var('page_title', 'Welcome to FUEL CMS') ?>
 <?php fuel_set_var('heading', 'Welcome to FUEL CMS v' . FUEL_VERSION) ?>
+<?php $this->load->helper('form'); ?>
+<?php
+if ($this->input->post('rewrite')) {
+    $file = '.htaccess';
+    if (is_really_writable($file)) {
+        $contents = file_get_contents($file);
+        $search = '#RewriteBase /';
+        $replacement = $this->input->post('rewrite');
+        $output = preg_replace($search, $replacement, $contents);
+        if ($contents != $output) {
+            file_put_contents($file, $output);
+        }
+    }
+}
+?>
 <section>
     <header>
         <div class="col-md-2 icon_block">
@@ -20,8 +35,15 @@
                 <p>The default is your web server's root directory (e.g "/"), but if you have FUEL CMS installed in a sub folder, you will need to replace the line which reads <code>RewriteBase /</code>.</p>
                 <p>If you are using the folder it was zipped up in from GitHub, it would be <code>RewriteBase /FUEL-CMS-master/</code>.</p>
                 <?php if (dirname($_SERVER['PHP_SELF']) != '/') : ?>
-                <p>In this instance, it would appear to be <code>RewriteBase <?php echo dirname($_SERVER['PHP_SELF']) ?>/</code>.</p>
-                <?php endif; ?>
+                    <p>In this instance, it would appear to be <code>RewriteBase <?php echo dirname($_SERVER['PHP_SELF']) ?>/</code>.
+                        <?php if (is_really_writable('.htaccess')) : ?>
+                            <?php echo form_open(''); ?>
+                            <?php echo form_input('rewrite', 'RewriteBase ' . dirname($_SERVER['PHP_SELF']) . '/'); ?>
+                            <?php echo form_submit('submit', 'Set RewriteBase'); ?>
+                            <?php echo form_close(); ?>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </p>
                 <p>In some server environments, you may need to add a "?" after index.php in the .htaccess like so: <code>RewriteRule .* index.php?/$0 [L]</code></p>
                 <p class="callout"><strong>NOTE:</strong> This is the only step needed if you want to use FUEL <em>without</em> the CMS.</p>
             </div>
