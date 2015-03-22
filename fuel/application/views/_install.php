@@ -34,6 +34,7 @@ if ($this->input->post('submit_database')) {
     $input = preg_replace('#/\*(.|[\r\n])*?\*/#', "\n", $input);
     // Remove # style comments
     $input = preg_replace('/\n{2,}/', "\n", preg_replace('/^#.*$/m', "\n", $input));
+
     function split_sql_file($sql, $delimiter = ';') {
         $sql = str_replace("\r", '', $sql);
         $data = preg_split('/' . preg_quote($delimiter, '/') . '$/m', $sql);
@@ -45,6 +46,7 @@ if ($this->input->post('submit_database')) {
         }
         return $data;
     }
+
     $sqls = split_sql_file($input);
     $this->ci = & get_instance();
     $this->ci->load->database();
@@ -55,6 +57,54 @@ if ($this->input->post('submit_database')) {
                 $errors[] = $this->ci->db->_error_message();
             }
         }
+    }
+}
+
+function generate_token($len = 32) {
+    $chars = array(
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+        'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+        'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+    );
+    shuffle($chars);
+    $num_chars = count($chars) - 1;
+    $token = '';
+    for ($i = 0; $i < $len; $i++) {
+        $token .= $chars[mt_rand(0, $num_chars)];
+    }
+    return $token;
+}
+if ($this->input->post('encryption_key')) {
+    $file = 'fuel/application/config/config.php';
+    $key = $this->input->post('encryption_key');
+    $contents = file_get_contents($file);
+    $search = '$config[\'encryption_key\'] = \'\'';
+    $replace = '$config[\'encryption_key\'] = \'' . $key . '\'';
+    $output = str_replace($search, $replace, $contents);
+    if ($contents != $output) {
+        file_put_contents($file, $output);
+    }
+}
+if ($this->input->post('submit_admin_enabled')) {
+    $file = 'fuel/application/config/MY_fuel.php';
+    $contents = file_get_contents($file);
+    $search = '$config[\'admin_enabled\'] = FALSE';
+    $replace = '$config[\'admin_enabled\'] = TRUE';
+    $output = str_replace($search, $replace, $contents);
+    if ($contents != $output) {
+        file_put_contents($file, $output);
+    }
+}
+if ($this->input->post('submit_fuel_mode')) {
+    $file = 'fuel/application/config/MY_fuel.php';
+    $contents = file_get_contents($file);
+    $search = '$config[\'fuel_mode\'] = \'views\'';
+    $replace = '$config[\'fuel_mode\'] = \'AUTO\'';
+    $output = str_replace($search, $replace, $contents);
+    if ($contents != $output) {
+        file_put_contents($file, $output);
     }
 }
 ?>
@@ -77,7 +127,7 @@ if ($this->input->post('submit_database')) {
                 <p>Change the Apache .htaccess found at the root of FUEL CMS's installation folder to the proper RewriteBase directory.</p>
                 <p>The default is your web server's root directory (e.g "/"), but if you have FUEL CMS installed in a sub folder, you will need to replace the line which reads <code>RewriteBase /</code>.</p>
                 <p>If you are using the folder it was zipped up in from GitHub, it would be <code>RewriteBase /FUEL-CMS-master/</code>.</p>
-                <?php if (dirname($_SERVER['PHP_SELF']) != '/') : ?>
+                    <?php if (dirname($_SERVER['PHP_SELF']) != '/') : ?>
                     <p>In this instance, it would appear to be <code>RewriteBase <?php echo dirname($_SERVER['PHP_SELF']) ?>/</code>.
                         <?php if (is_really_writable('.htaccess')) : ?>
                             <?php echo form_open(''); ?>
@@ -138,12 +188,7 @@ if ($this->input->post('submit_database')) {
                 </ul>
             </div>
         </li>
-
-        <?php
-        if ($this->config->item('encryption_key') == '' OR
-                $this->config->item('fuel_mode', 'fuel') == 'views' OR ! $this->config->item('admin_enabled', 'fuel')
-        ) :
-            ?>
+        <?php if ($this->config->item('encryption_key') == '' OR $this->config->item('fuel_mode', 'fuel') == 'views' OR ! $this->config->item('admin_enabled', 'fuel')) : ?>
             <li>
                 <div class="col-md-2 icon_block">
                     <div class="circle">4</div>
@@ -152,18 +197,18 @@ if ($this->input->post('submit_database')) {
                     <h4>Make configuration changes</h4>
                     <ul class="writable">
                         <?php if ($this->config->item('encryption_key') == '') : ?>
-                            <li>In the <strong>fuel/application/config/config.php</strong>, <a href="http://jeffreybarke.net/tools/codeigniter-encryption-key-generator/">change the <code>$config['encryption_key']</code> to your own unique key</a>.</li>
+                            <li>In the <code>fuel/application/config/config.php</code>, change the <code>$config['encryption_key']</code> to your own unique key. <?php echo form_open('') . form_input('encryption_key', generate_token()) . form_submit('submit', 'Set Encryption Key') . form_close(); ?></li>
                         <?php endif; ?>
                         <?php if (!$this->config->item('admin_enabled', 'fuel')) : ?>
-                            <li>In the <strong>fuel/application/config/MY_fuel.php</strong> file, change the <code>$config['admin_enabled']</code> configuration property to <code>TRUE</code>. If you do not want the CMS accessible, leave it as <strong>FALSE</strong>.</li>
+                            <li>In the <code>fuel/application/config/MY_fuel.php</code> file, change the <code>$config['admin_enabled']</code> configuration property to <code>TRUE</code>. If you do not want the CMS accessible, leave it as <strong>FALSE</strong>. <?php echo form_open('') . form_submit('submit_admin_enabled', 'Set Admin Enabled') . form_close(); ?></li>
                         <?php endif; ?>
                         <?php if ($this->config->item('fuel_mode', 'fuel') == 'views') : ?>
-                            <li>In the <strong>fuel/application/config/MY_fuel.php</strong> file, change the <code>$config['fuel_mode']</code> configuration property to <code>AUTO</code>. This must be done only if you want to view pages created in the CMS.</li>
+                            <li>In the <code>fuel/application/config/MY_fuel.php</code> file, change the <code>$config['fuel_mode']</code> configuration property to <code>AUTO</code>. This must be done only if you want to view pages created in the CMS. <?php echo form_open('') . form_submit('submit_fuel_mode', 'Set Fuel Mode to AUTO') . form_close(); ?></li>
                         <?php endif; ?>
                     </ul>
                 </div>
             </li>
-        <?php endif; ?>
+<?php endif; ?>
     </ol>
     <div>
         <div class="col-md-2"></div>
